@@ -7,6 +7,7 @@ import SwiftUI
 struct GlowBorderView: View {
 
     @ObservedObject var state: GlowBorderState
+    @ObservedObject var appSettings: AppSettings = .shared
     var hasNotch: Bool = false
     private let showUnclippedDebug = false
 
@@ -19,7 +20,7 @@ struct GlowBorderView: View {
                         .stroke(Color.yellow.opacity(0.95), lineWidth: 1)
                 }
             } else if !state.isActive || state.colors.isEmpty {
-                appleIcon(color: .black)
+                appleIcon(color: Color(nsColor: appSettings.defaultIconColor))
             } else if state.isActive && !state.colors.isEmpty {
                 TimelineView(.animation) { timeline in
                     let phase = state.phase(at: timeline.date)

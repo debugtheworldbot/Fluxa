@@ -440,6 +440,17 @@ struct GeneralSettingsTab: View {
 
     @ObservedObject var appSettings: AppSettings
 
+    private static let iconColorPresets: [String] = [
+        "#000000",  // Black
+        "#FFFFFF",  // White
+        "#8E8E93",  // Gray
+        "#007AFF",  // Blue
+        "#34C759",  // Green
+        "#FF9500",  // Orange
+        "#FF2D55",  // Pink
+        "#AF52DE",  // Purple
+    ]
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("General Settings")
@@ -450,6 +461,35 @@ struct GeneralSettingsTab: View {
                     Toggle("Launch at Login", isOn: $appSettings.launchAtLogin)
 
                     Text("When enabled, GlowNotifier will start automatically when you log in.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(8)
+            }
+
+            GroupBox("Icon") {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Default Color")
+                        Spacer()
+                        HStack(spacing: 8) {
+                            ForEach(Self.iconColorPresets, id: \.self) { hex in
+                                Circle()
+                                    .fill(Color(nsColor: NSColor(hex: hex) ?? .black))
+                                    .frame(width: 20, height: 20)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.accentColor, lineWidth: 2)
+                                            .opacity(appSettings.defaultIconColorHex == hex ? 1 : 0)
+                                    )
+                                    .onTapGesture {
+                                        appSettings.defaultIconColorHex = hex
+                                    }
+                            }
+                        }
+                    }
+
+                    Text("The icon color when there are no active notifications.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

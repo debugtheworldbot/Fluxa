@@ -41,6 +41,7 @@ final class AppSettings: ObservableObject {
         static let animationSpeed = "animationSpeed"
         static let pulseIntensity = "pulseIntensity"
         static let launchAtLogin = "launchAtLogin"
+        static let defaultIconColorHex = "defaultIconColorHex"
         static let didDisableAllAppsByDefaultMigration = "didDisableAllAppsByDefaultMigration"
     }
 
@@ -83,6 +84,15 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(launchAtLogin, forKey: Keys.launchAtLogin) }
     }
 
+    /// Hex color for the icon in its default (no-notification) state.
+    @Published var defaultIconColorHex: String {
+        didSet { defaults.set(defaultIconColorHex, forKey: Keys.defaultIconColorHex) }
+    }
+
+    var defaultIconColor: NSColor {
+        NSColor(hex: defaultIconColorHex) ?? .black
+    }
+
     // MARK: - Default Colors
 
     /// A palette of visually distinct default colors for auto-assignment.
@@ -112,6 +122,7 @@ final class AppSettings: ObservableObject {
         self.animationSpeed = CGFloat(defaults.double(forKey: Keys.animationSpeed).nonZero ?? 0.15)
         self.pulseIntensity = CGFloat(defaults.double(forKey: Keys.pulseIntensity).nonZero ?? 0.5)
         self.launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
+        self.defaultIconColorHex = defaults.string(forKey: Keys.defaultIconColorHex) ?? "#000000"
         self.appConfigurations = [:]
         self.appConfigurations = loadAppConfigurations()
         migrateDisableAllAppsByDefaultIfNeeded()
