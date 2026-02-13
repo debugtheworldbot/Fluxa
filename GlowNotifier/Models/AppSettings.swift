@@ -40,6 +40,7 @@ final class AppSettings: ObservableObject {
         static let animationSpeed = "animationSpeed"
         static let pulseIntensity = "pulseIntensity"
         static let launchAtLogin = "launchAtLogin"
+        static let didDisableAllAppsByDefaultMigration = "didDisableAllAppsByDefaultMigration"
     }
 
     // MARK: - Onboarding
@@ -112,6 +113,7 @@ final class AppSettings: ObservableObject {
         self.launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
         self.appConfigurations = [:]
         self.appConfigurations = loadAppConfigurations()
+        migrateDisableAllAppsByDefaultIfNeeded()
     }
 
     // MARK: - App Configuration Management
@@ -148,6 +150,19 @@ final class AppSettings: ObservableObject {
             return [:]
         }
         return configs
+    }
+
+    /// One-time migration: ensure existing persisted app entries start disabled.
+    private func migrateDisableAllAppsByDefaultIfNeeded() {
+        guard !defaults.bool(forKey: Keys.didDisableAllAppsByDefaultMigration) else { return }
+
+        appConfigurations = appConfigurations.mapValues { config in
+            var updated = config
+            updated.isEnabled = false
+            return updated
+        }
+
+        defaults.set(true, forKey: Keys.didDisableAllAppsByDefaultMigration)
     }
 
     // MARK: - Helpers
