@@ -7,19 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA000001 /* GlowNotifierApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001; };
-		AA000002 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002; };
-		AA000003 /* GlowBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003; };
-		AA000004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004; };
-		AA000005 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000005; };
-		AA000006 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000006; };
-		AA000007 /* GlowBorderState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000007; };
-		AA000008 /* OverlayWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000008; };
-		AA000009 /* NotificationDatabaseMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000009; };
-		AA000010 /* NotificationDatabaseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000010; };
-		AA000011 /* NotificationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011; };
-		AA000012 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000012; };
-		AA000013 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = AB000013; };
+		AA000001 /* GlowNotifierApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001 /* GlowNotifierApp.swift */; };
+		AA000002 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002 /* StatusBarController.swift */; };
+		AA000003 /* GlowBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* GlowBorderView.swift */; };
+		AA000004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004 /* SettingsView.swift */; };
+		AA000005 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000005 /* OnboardingView.swift */; };
+		AA000006 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000006 /* AppSettings.swift */; };
+		AA000007 /* GlowBorderState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000007 /* GlowBorderState.swift */; };
+		AA000008 /* OverlayWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000008 /* OverlayWindowManager.swift */; };
+		AA000009 /* NotificationDatabaseMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000009 /* NotificationDatabaseMonitor.swift */; };
+		AA000010 /* NotificationDatabaseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000010 /* NotificationDatabaseParser.swift */; };
+		AA000011 /* NotificationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011 /* NotificationEngine.swift */; };
+		AA000012 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000012 /* Assets.xcassets */; };
+		AA000013 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = AB000013 /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,8 +37,8 @@
 		AB000012 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AB000013 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		AB000014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AB000020 /* GlowNotifier.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlowNotifier.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB000015 /* GlowNotifier.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlowNotifier.entitlements; sourceTree = "<group>"; };
+		AB000020 /* GlowNotifier.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlowNotifier.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,7 +136,7 @@
 /* Begin PBXNativeTarget section */
 		AE000001 /* GlowNotifier */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AF000003;
+			buildConfigurationList = AF000003 /* Build configuration list for PBXNativeTarget "GlowNotifier" */;
 			buildPhases = (
 				AC000002 /* Sources */,
 				AC000001 /* Frameworks */,
@@ -161,7 +161,7 @@
 				LastSwiftUpdateCheck = 1520;
 				LastUpgradeCheck = 1520;
 			};
-			buildConfigurationList = AF000001;
+			buildConfigurationList = AF000001 /* Build configuration list for PBXProject "GlowNotifier" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -268,9 +268,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GlowNotifier/GlowNotifier.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 228XJY7Z32;
 				ENABLE_APP_SANDBOX = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GlowNotifier/Info.plist;
@@ -291,9 +293,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GlowNotifier/GlowNotifier.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 228XJY7Z32;
 				ENABLE_APP_SANDBOX = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GlowNotifier/Info.plist;
@@ -331,7 +335,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = AE000002 /* Project object */;
 }
