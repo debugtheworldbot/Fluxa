@@ -7,51 +7,50 @@ import SwiftUI
 struct GlowBorderView: View {
 
     @ObservedObject var state: GlowBorderState
-    private let showDebugAppleOverlay = true
-    private let showDebugRectOverlay = true
-    private let appleGlyph = "\u{F8FF}"
+    private let showUnclippedDebug = false
+    private let appleMaskOffset = CGSize(width: 0, height: 0)
 
     var body: some View {
         GeometryReader { geometry in
-            if showDebugRectOverlay {
-                Rectangle()
-                    .fill(Color.red.opacity(0.45))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 2)
-                            .stroke(Color.yellow.opacity(0.9), lineWidth: 1)
-                    )
-                    .allowsHitTesting(false)
+            if showUnclippedDebug {
+                ZStack {
+                    appleMask(size: geometry.size, color: .black)
+
+                    RoundedRectangle(cornerRadius: 3)
+                        .stroke(Color.yellow.opacity(0.95), lineWidth: 1)
+                }
+            } else if !state.isActive || state.colors.isEmpty {
+                appleMask(size: geometry.size, color: .black)
             } else if state.isActive && !state.colors.isEmpty {
                 let phase = state.animationPhase
                 let palette = normalizedPalette()
-                ZStack {
-                    // Subtract-style compositing: keep only the apple-glyph alpha region.
-                    flowingColorLayers(size: geometry.size, phase: phase, palette: palette)
-                        .compositingGroup()
-                        .mask {
-                            appleMask(size: geometry.size)
-                        }
-
-                    if showDebugAppleOverlay {
+                flowingColorLayers(size: geometry.size, phase: phase, palette: palette)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .compositingGroup()
+                    .mask {
                         appleMask(size: geometry.size)
-                            .foregroundStyle(.black.opacity(0.9))
-                            .blendMode(.normal)
                     }
-                }
-                .transition(.opacity)
+                    .transition(.opacity)
             }
         }
         .allowsHitTesting(false)
     }
 
     @ViewBuilder
-    private func appleMask(size: CGSize) -> some View {
-        let iconSize = min(size.width, size.height) * 0.82
-        Text(appleGlyph)
-            .font(.system(size: iconSize, weight: .regular, design: .default))
-            .foregroundStyle(.white)
+    private func appleMask(size: CGSize, color: Color = .white) -> some View {
+        Image(systemName: "apple.logo")
+            .resizable()
+            .scaledToFit()
+            .frame(
+                width: min(size.width, size.height) * 0.73,
+                height: min(size.width, size.height) * 0.73,
+                alignment: .center
+            )
+            .foregroundStyle(color)
             .frame(width: size.width, height: size.height)
-            .offset(y: -0.6)
+            .offset(appleMaskOffset)
+            .contentShape(Rectangle())
     }
 
     // MARK: - Flowing Color Layers
@@ -124,6 +123,18 @@ struct GlowBorderView: View {
         }
 
         return state.colors.map { $0.opacity(0.95) }
+    }
+
+    private func debugPalette() -> [Color] {
+        if state.colors.isEmpty {
+            return [
+                Color.red.opacity(0.9),
+                Color.orange.opacity(0.9),
+                Color.pink.opacity(0.9),
+                Color.blue.opacity(0.9),
+            ]
+        }
+        return normalizedPalette()
     }
 
 }
