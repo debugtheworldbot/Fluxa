@@ -21,14 +21,16 @@ struct GlowBorderView: View {
             } else if !state.isActive || state.colors.isEmpty {
                 appleIcon(color: .black)
             } else if state.isActive && !state.colors.isEmpty {
-                let phase = state.animationPhase
-                let palette = normalizedPalette()
-                flowingColorLayers(phase: phase, palette: palette)
-                    .frame(width: 16, height: 17)
-                    .clipped()
-                    .compositingGroup()
-                    .mask { appleIcon(color: .white) }
-                    .transition(.opacity)
+                TimelineView(.animation) { timeline in
+                    let phase = state.phase(at: timeline.date)
+                    let palette = normalizedPalette()
+                    flowingColorLayers(phase: phase, palette: palette)
+                        .frame(width: 16, height: 17)
+                        .clipped()
+                        .compositingGroup()
+                        .mask { appleIcon(color: .white) }
+                }
+                .transition(.opacity)
             }
         }
         .offset(y: hasNotch ? -1.5 : 0)
