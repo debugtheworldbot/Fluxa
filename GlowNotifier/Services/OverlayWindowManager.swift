@@ -4,11 +4,14 @@ import SwiftUI
 // MARK: - Overlay Window Manager
 
 /// Manages transparent, click-through overlay windows on all connected displays.
-/// Each window hosts a `GlowBorderView` that renders the animated screen-edge glow.
+/// Each window hosts a `GlowBorderView` that renders the animated Apple-icon glow.
 final class OverlayWindowManager: ObservableObject {
 
     private var overlayWindows: [NSScreen: NSWindow] = [:]
     private var glowStates: [NSScreen: GlowBorderState] = [:]
+    private let iconSize = NSSize(width: 22, height: 22)
+    private let iconLeftPadding: CGFloat = 16
+    private let iconVerticalOffset: CGFloat = -3
 
     /// Tracks currently active glow layers by internal glow key.
     @Published var activeGlows: [String: GlowLayer] = [:]
@@ -29,22 +32,24 @@ final class OverlayWindowManager: ObservableObject {
     private func createOverlayWindow(for screen: NSScreen) {
         let state = GlowBorderState()
         let glowView = GlowBorderView(state: state)
+        let iconFrame = makeIconFrame(for: screen)
 
         let window = NSWindow(
-            contentRect: screen.frame,
+            contentRect: iconFrame,
             styleMask: .borderless,
             backing: .buffered,
             defer: false
         )
 
+        // Keep this above the system menu bar icon so the color fill replaces it visually.
         window.level = .screenSaver
         window.isOpaque = false
         window.backgroundColor = .clear
         window.ignoresMouseEvents = true
         window.hasShadow = false
-        window.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary]
+        window.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         window.contentView = NSHostingView(rootView: glowView)
-        window.setFrame(screen.frame, display: true)
+        window.setFrame(iconFrame, display: true)
         window.orderFrontRegardless()
 
         overlayWindows[screen] = window
@@ -74,9 +79,7 @@ final class OverlayWindowManager: ObservableObject {
         setupOverlays()
 
         // Re-apply active glows
-        for (_, layer) in activeGlows {
-            applyGlowToAllScreens(layer)
-        }
+        updateAllScreenGlows()
     }
 
     // MARK: - Glow Control
@@ -91,13 +94,7 @@ final class OverlayWindowManager: ObservableObject {
         )
 
         activeGlows[glowKey] = layer
-        applyGlowToAllScreens(layer)
-
-        // Schedule auto-dismiss after the configured duration
-        let duration = AppSettings.shared.glowDuration
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
-            self?.dismissGlow(forKey: glowKey)
-        }
+        updateAllScreenGlows()
     }
 
     /// Dismisses the glow for a specific notification.
@@ -148,15 +145,37 @@ final class OverlayWindowManager: ObservableObject {
 
     // MARK: - Internal
 
-    private func applyGlowToAllScreens(_ layer: GlowLayer) {
-        updateAllScreenGlows()
+    private func makeIconFrame(for screen: NSScreen) -> NSRect {
+        let menuBarHeight = NSStatusBar.system.thickness
+        let centeredY = screen.frame.maxY - menuBarHeight + ((menuBarHeight - iconSize.height) / 2.0)
+
+        return NSRect(
+            x: screen.frame.minX + iconLeftPadding,
+            y: centeredY + iconVerticalOffset,
+            width: iconSize.width,
+            height: iconSize.height
+        )
     }
 
     private func updateAllScreenGlows() {
-        let colors = Array(activeGlows.values.map { $0.color })
+        let colors = aggregatedActiveColors()
         for (_, state) in glowStates {
             state.updateColors(colors)
         }
+    }
+
+    /// Aggregates colors by notification type (bundle identifier).
+    /// A type contributes one color while it still has unread notifications.
+    private func aggregatedActiveColors() -> [NSColor] {
+        let grouped = Dictionary(grouping: activeGlows.values, by: { $0.bundleIdentifier })
+
+        let representatives = grouped.values.compactMap { layers in
+            layers.min(by: { $0.startTime < $1.startTime })
+        }
+
+        return representatives
+            .sorted(by: { $0.startTime < $1.startTime })
+            .map(\.color)
     }
 
     private func notificationGlowKey(for notificationId: Int64) -> String {
