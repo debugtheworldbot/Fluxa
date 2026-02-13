@@ -105,9 +105,15 @@ final class StatusBarController {
     }
 
     @objc private func openSettings() {
-        if let window = settingsWindow, window.isVisible {
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+        // Present on next runloop tick to avoid menu-closing focus race.
+        DispatchQueue.main.async { [weak self] in
+            self?.presentSettingsWindow()
+        }
+    }
+
+    private func presentSettingsWindow() {
+        if let window = settingsWindow {
+            bringSettingsWindowToFront(window)
             return
         }
 
@@ -128,10 +134,17 @@ final class StatusBarController {
         window.center()
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 560, height: 420)
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        window.collectionBehavior.insert(.moveToActiveSpace)
 
         settingsWindow = window
+        bringSettingsWindowToFront(window)
+    }
+
+    private func bringSettingsWindowToFront(_ window: NSWindow) {
+        NSRunningApplication.current.activate(options: [.activateIgnoringOtherApps])
+        NSApp.activate(ignoringOtherApps: true)
+        window.orderFrontRegardless()
+        window.makeKeyAndOrderFront(nil)
     }
 
     @objc private func quitApp() {

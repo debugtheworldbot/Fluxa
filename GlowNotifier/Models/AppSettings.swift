@@ -9,6 +9,7 @@ struct AppConfiguration: Codable, Identifiable {
     let bundleIdentifier: String
     var displayName: String
     var isEnabled: Bool
+    var enabledAt: Date?
     var colorHex: String
 
     var color: NSColor {
@@ -17,7 +18,7 @@ struct AppConfiguration: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case bundleIdentifier, displayName, isEnabled, colorHex
+        case bundleIdentifier, displayName, isEnabled, enabledAt, colorHex
     }
 }
 
@@ -130,6 +131,7 @@ final class AppSettings: ObservableObject {
             bundleIdentifier: bundleIdentifier,
             displayName: displayName,
             isEnabled: false,
+            enabledAt: nil,
             colorHex: colorHex
         )
 
@@ -159,6 +161,7 @@ final class AppSettings: ObservableObject {
         appConfigurations = appConfigurations.mapValues { config in
             var updated = config
             updated.isEnabled = false
+            updated.enabledAt = nil
             return updated
         }
 

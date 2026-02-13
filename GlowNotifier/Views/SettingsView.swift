@@ -74,8 +74,32 @@ struct AppsSettingsTab: View {
     ]
 
     var filteredApps: [AppConfiguration] {
-        let allApps = Array(appSettings.appConfigurations.values)
-            .sorted { lhs, rhs in
+        let allConfigs = Array(appSettings.appConfigurations.values)
+        let iconAvailability = Dictionary(
+            uniqueKeysWithValues: allConfigs.map { config in
+                (config.bundleIdentifier, hasAppIcon(for: config.bundleIdentifier))
+            }
+        )
+
+        let allApps = allConfigs.sorted { lhs, rhs in
+                if lhs.isEnabled != rhs.isEnabled {
+                    return lhs.isEnabled && !rhs.isEnabled
+                }
+
+                if lhs.isEnabled && rhs.isEnabled {
+                    let lhsEnabledAt = lhs.enabledAt ?? .distantPast
+                    let rhsEnabledAt = rhs.enabledAt ?? .distantPast
+                    if lhsEnabledAt != rhsEnabledAt {
+                        return lhsEnabledAt < rhsEnabledAt
+                    }
+                }
+
+                let lhsHasIcon = iconAvailability[lhs.bundleIdentifier] ?? false
+                let rhsHasIcon = iconAvailability[rhs.bundleIdentifier] ?? false
+                if lhsHasIcon != rhsHasIcon {
+                    return lhsHasIcon && !rhsHasIcon
+                }
+
                 let lhsPriority = appPriority(for: lhs)
                 let rhsPriority = appPriority(for: rhs)
                 if lhsPriority != rhsPriority {
@@ -104,6 +128,10 @@ struct AppsSettingsTab: View {
         }
 
         return 1
+    }
+
+    private func hasAppIcon(for bundleIdentifier: String) -> Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) != nil
     }
 
     var body: some View {
@@ -213,6 +241,7 @@ struct AppConfigRow: View {
                 .onChange(of: isEnabled) { newValue in
                     var updated = config
                     updated.isEnabled = newValue
+                    updated.enabledAt = newValue ? Date() : nil
                     appSettings.appConfigurations[config.bundleIdentifier] = updated
                 }
         }
