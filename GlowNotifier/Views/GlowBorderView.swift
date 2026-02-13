@@ -7,58 +7,56 @@ import SwiftUI
 struct GlowBorderView: View {
 
     @ObservedObject var state: GlowBorderState
+    var hasNotch: Bool = false
     private let showUnclippedDebug = false
-    private let appleMaskOffset = CGSize(width: 0, height: 0)
 
     var body: some View {
-        GeometryReader { geometry in
+        ZStack {
             if showUnclippedDebug {
                 ZStack {
-                    appleMask(size: geometry.size, color: .black)
-
+                    appleIcon(color: .black)
                     RoundedRectangle(cornerRadius: 3)
                         .stroke(Color.yellow.opacity(0.95), lineWidth: 1)
                 }
             } else if !state.isActive || state.colors.isEmpty {
-                appleMask(size: geometry.size, color: .black)
+                appleIcon(color: .black)
             } else if state.isActive && !state.colors.isEmpty {
                 let phase = state.animationPhase
                 let palette = normalizedPalette()
-                flowingColorLayers(size: geometry.size, phase: phase, palette: palette)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
+                flowingColorLayers(phase: phase, palette: palette)
+                    .frame(width: 16, height: 17)
                     .clipped()
                     .compositingGroup()
-                    .mask {
-                        appleMask(size: geometry.size)
-                    }
+                    .mask { appleIcon(color: .white) }
                     .transition(.opacity)
             }
         }
+        .offset(y: hasNotch ? -1.5 : 0)
+        .frame(width: 24, height: 24)
         .allowsHitTesting(false)
     }
 
+    /// Renders the Apple logo using `.font()` sizing to match system menu bar rendering.
     @ViewBuilder
-    private func appleMask(size: CGSize, color: Color = .white) -> some View {
-        Image(systemName: "apple.logo")
-            .resizable()
-            .scaledToFit()
-            .frame(
-                width: min(size.width, size.height) * 0.73,
-                height: min(size.width, size.height) * 0.73,
-                alignment: .center
-            )
-            .foregroundStyle(color)
-            .frame(width: size.width, height: size.height)
-            .offset(appleMaskOffset)
-            .contentShape(Rectangle())
+    private func appleIcon(color: Color) -> some View {
+        let size: CGFloat = 17
+        let w: Font.Weight = .black
+        ZStack {
+            Image(systemName: "apple.logo").font(.system(size: size, weight: w)).foregroundColor(color)
+            Image(systemName: "apple.logo").font(.system(size: size, weight: w)).foregroundColor(color).offset(x: 0.3)
+            Image(systemName: "apple.logo").font(.system(size: size, weight: w)).foregroundColor(color).offset(x: -0.3)
+            Image(systemName: "apple.logo").font(.system(size: size, weight: w)).foregroundColor(color).offset(y: 0.3)
+            Image(systemName: "apple.logo").font(.system(size: size, weight: w)).foregroundColor(color).offset(y: -0.3)
+        }
+        .frame(width: 18, height: 19)
     }
 
     // MARK: - Flowing Color Layers
 
     @ViewBuilder
-    private func flowingColorLayers(size: CGSize, phase: CGFloat, palette: [Color]) -> some View {
-        let width = max(size.width, 1)
-        let height = max(size.height, 1)
+    private func flowingColorLayers(phase: CGFloat, palette: [Color]) -> some View {
+        let width: CGFloat = 16
+        let height: CGFloat = 17
         let flow = Double(phase) * .pi * 2.0
 
         ZStack {

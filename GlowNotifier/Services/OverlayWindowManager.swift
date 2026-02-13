@@ -9,9 +9,6 @@ final class OverlayWindowManager: ObservableObject {
 
     private var overlayWindows: [NSScreen: NSWindow] = [:]
     private var glowStates: [NSScreen: GlowBorderState] = [:]
-    private let iconSize = NSSize(width: 22, height: 22)
-    private let iconLeftPadding: CGFloat = 16
-    private let iconVerticalOffset: CGFloat = -3
 
     /// Tracks currently active glow layers by internal glow key.
     @Published var activeGlows: [String: GlowLayer] = [:]
@@ -31,7 +28,7 @@ final class OverlayWindowManager: ObservableObject {
 
     private func createOverlayWindow(for screen: NSScreen) {
         let state = GlowBorderState()
-        let glowView = GlowBorderView(state: state)
+        let glowView = GlowBorderView(state: state, hasNotch: screen.hasTopNotchDesign)
         let iconFrame = makeIconFrame(for: screen)
 
         let window = NSWindow(
@@ -143,17 +140,18 @@ final class OverlayWindowManager: ObservableObject {
         }
     }
 
-    // MARK: - Internal
+    // MARK: - Icon Frame
 
     private func makeIconFrame(for screen: NSScreen) -> NSRect {
+        let size: CGFloat = 24
         let menuBarHeight = NSStatusBar.system.thickness
-        let centeredY = screen.frame.maxY - menuBarHeight + ((menuBarHeight - iconSize.height) / 2.0)
+        let centeredY = screen.frame.maxY - menuBarHeight + ((menuBarHeight - size) / 2.0)
 
         return NSRect(
-            x: screen.frame.minX + iconLeftPadding,
-            y: centeredY + iconVerticalOffset,
-            width: iconSize.width,
-            height: iconSize.height
+            x: screen.frame.minX + 15,
+            y: centeredY - 3,
+            width: size,
+            height: size
         )
     }
 
@@ -180,6 +178,16 @@ final class OverlayWindowManager: ObservableObject {
 
     private func notificationGlowKey(for notificationId: Int64) -> String {
         return "notification-\(notificationId)"
+    }
+}
+
+// MARK: - NSScreen Notch Detection
+
+extension NSScreen {
+    /// Returns `true` if this screen has a top notch (e.g. MacBook Pro 2021+).
+    var hasTopNotchDesign: Bool {
+        guard #available(macOS 12.0, *) else { return false }
+        return safeAreaInsets.top > 0
     }
 }
 
