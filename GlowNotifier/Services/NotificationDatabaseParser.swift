@@ -23,6 +23,7 @@ struct NotificationEvent: Identifiable, Equatable {
 final class NotificationDatabaseParser {
 
     private let databasePath: String
+    private var cachedRecordColumns: Set<String>?
 
     /// Tracks the last processed record ID to avoid re-processing.
     private var lastProcessedRecordId: Int64 = 0
@@ -179,6 +180,57 @@ final class NotificationDatabaseParser {
         print("[NotificationDatabaseParser] Initialized last record ID: \(lastProcessedRecordId)")
     }
 
+    /// Returns the subset of provided notification IDs that still exist as active records.
+    func fetchExistingNotificationIds(from notificationIds: Set<Int64>) -> Set<Int64> {
+        guard !notificationIds.isEmpty else { return [] }
+
+        var db: OpaquePointer?
+        let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_URI
+        let uri = "file:\(databasePath)?mode=ro&immutable=0"
+
+        guard sqlite3_open_v2(uri, &db, flags, nil) == SQLITE_OK else {
+            sqlite3_close(db)
+            return []
+        }
+
+        defer { sqlite3_close(db) }
+
+        let usesPresentedFilter = recordTableHasColumn("presented", db: db!)
+        let allIds = Array(notificationIds)
+        let chunkSize = 900
+        var existingIds: Set<Int64> = []
+
+        for start in stride(from: 0, to: allIds.count, by: chunkSize) {
+            let end = min(start + chunkSize, allIds.count)
+            let chunk = Array(allIds[start..<end])
+            let placeholders = Array(repeating: "?", count: chunk.count).joined(separator: ",")
+
+            var query = "SELECT rec_id FROM record WHERE rec_id IN (\(placeholders))"
+            if usesPresentedFilter {
+                query += " AND presented = 1"
+            }
+            query += ";"
+
+            var statement: OpaquePointer?
+            guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
+                continue
+            }
+
+            for (index, id) in chunk.enumerated() {
+                sqlite3_bind_int64(statement, Int32(index + 1), id)
+            }
+
+            while sqlite3_step(statement) == SQLITE_ROW {
+                let recId = sqlite3_column_int64(statement, 0)
+                existingIds.insert(recId)
+            }
+
+            sqlite3_finalize(statement)
+        }
+
+        return existingIds
+    }
+
     // MARK: - Internal Helpers
 
     /// Resolves a bundle identifier from the `app` table using the app_id foreign key.
@@ -219,5 +271,28 @@ final class NotificationDatabaseParser {
         let subtitle = plist["subt"] as? String ?? plist["subtitle"] as? String ?? plist["body"] as? String
 
         return (title, subtitle)
+    }
+
+    private func recordTableHasColumn(_ columnName: String, db: OpaquePointer) -> Bool {
+        if let cachedColumns = cachedRecordColumns {
+            return cachedColumns.contains(columnName)
+        }
+
+        var columns: Set<String> = []
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "PRAGMA table_info(record);", -1, &statement, nil) == SQLITE_OK else {
+            return false
+        }
+
+        defer { sqlite3_finalize(statement) }
+
+        while sqlite3_step(statement) == SQLITE_ROW {
+            if let cString = sqlite3_column_text(statement, 1) {
+                columns.insert(String(cString: cString))
+            }
+        }
+
+        cachedRecordColumns = columns
+        return columns.contains(columnName)
     }
 }

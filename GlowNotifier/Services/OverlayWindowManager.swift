@@ -10,7 +10,7 @@ final class OverlayWindowManager: ObservableObject {
     private var overlayWindows: [NSScreen: NSWindow] = [:]
     private var glowStates: [NSScreen: GlowBorderState] = [:]
 
-    /// Tracks currently active glow layers by bundle identifier.
+    /// Tracks currently active glow layers by internal glow key.
     @Published var activeGlows: [String: GlowLayer] = [:]
 
     init() {
@@ -82,26 +82,32 @@ final class OverlayWindowManager: ObservableObject {
     // MARK: - Glow Control
 
     /// Triggers a glow animation for a specific app notification.
-    func triggerGlow(color: NSColor, bundleIdentifier: String) {
+    func triggerGlow(color: NSColor, notificationId: Int64, bundleIdentifier: String) {
+        let glowKey = notificationGlowKey(for: notificationId)
         let layer = GlowLayer(
             color: color,
             bundleIdentifier: bundleIdentifier,
             startTime: Date()
         )
 
-        activeGlows[bundleIdentifier] = layer
+        activeGlows[glowKey] = layer
         applyGlowToAllScreens(layer)
 
         // Schedule auto-dismiss after the configured duration
         let duration = AppSettings.shared.glowDuration
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
-            self?.dismissGlow(for: bundleIdentifier)
+            self?.dismissGlow(forKey: glowKey)
         }
     }
 
-    /// Dismisses the glow for a specific app.
-    func dismissGlow(for bundleIdentifier: String) {
-        activeGlows.removeValue(forKey: bundleIdentifier)
+    /// Dismisses the glow for a specific notification.
+    func dismissGlow(notificationId: Int64) {
+        let glowKey = notificationGlowKey(for: notificationId)
+        dismissGlow(forKey: glowKey)
+    }
+
+    private func dismissGlow(forKey glowKey: String) {
+        activeGlows.removeValue(forKey: glowKey)
         updateAllScreenGlows()
     }
 
@@ -120,13 +126,13 @@ final class OverlayWindowManager: ObservableObject {
         ]
 
         for (index, color) in testColors.enumerated() {
-            let id = "test-\(index)"
+            let glowKey = "test-\(index)"
             let layer = GlowLayer(
                 color: color,
-                bundleIdentifier: id,
+                bundleIdentifier: glowKey,
                 startTime: Date()
             )
-            activeGlows[id] = layer
+            activeGlows[glowKey] = layer
         }
 
         updateAllScreenGlows()
@@ -151,6 +157,10 @@ final class OverlayWindowManager: ObservableObject {
         for (_, state) in glowStates {
             state.updateColors(colors)
         }
+    }
+
+    private func notificationGlowKey(for notificationId: Int64) -> String {
+        return "notification-\(notificationId)"
     }
 }
 

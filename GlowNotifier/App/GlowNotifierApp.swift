@@ -40,8 +40,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         // Connect notification engine to overlay manager
-        notificationEngine?.onNotification = { [weak self] event in
-            self?.handleNotification(event)
+        notificationEngine?.onNotificationAdded = { [weak self] event in
+            self?.handleNotificationAdded(event)
+        }
+        notificationEngine?.onNotificationRemoved = { [weak self] notificationId in
+            self?.handleNotificationRemoved(notificationId)
         }
 
         // Check permissions and show onboarding if needed
@@ -52,7 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func handleNotification(_ event: NotificationEvent) {
+    private func handleNotificationAdded(_ event: NotificationEvent) {
         let settings = AppSettings.shared
         guard let appConfig = settings.appConfigurations[event.bundleIdentifier],
               appConfig.isEnabled else {
@@ -62,8 +65,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.overlayManager?.triggerGlow(
                 color: appConfig.color,
+                notificationId: event.id,
                 bundleIdentifier: event.bundleIdentifier
             )
+        }
+    }
+
+    private func handleNotificationRemoved(_ notificationId: Int64) {
+        DispatchQueue.main.async { [weak self] in
+            self?.overlayManager?.dismissGlow(notificationId: notificationId)
         }
     }
 

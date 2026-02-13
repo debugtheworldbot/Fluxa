@@ -15,7 +15,13 @@ final class NotificationEngine: ObservableObject {
     )
 
     /// Callback fired when a new notification is detected.
-    var onNotification: ((NotificationEvent) -> Void)?
+    var onNotificationAdded: ((NotificationEvent) -> Void)?
+
+    /// Callback fired when a tracked notification is dismissed/read.
+    var onNotificationRemoved: ((Int64) -> Void)?
+
+    /// Notification IDs currently tracked for lifecycle updates.
+    private var trackedNotificationIds: Set<Int64> = []
 
     /// Whether the engine is currently monitoring.
     @Published var isMonitoring: Bool = false
@@ -80,10 +86,23 @@ final class NotificationEngine: ObservableObject {
         for event in newEvents {
             sessionEventCount += 1
             lastEventTime = event.deliveredDate
+            trackedNotificationIds.insert(event.id)
 
             print("[NotificationEngine] New notification from: \(event.bundleIdentifier)")
 
-            onNotification?(event)
+            onNotificationAdded?(event)
         }
+
+        guard !trackedNotificationIds.isEmpty else { return }
+
+        let existingIds = databaseParser.fetchExistingNotificationIds(from: trackedNotificationIds)
+        let removedIds = trackedNotificationIds.subtracting(existingIds)
+
+        for removedId in removedIds {
+            print("[NotificationEngine] Notification removed/read: \(removedId)")
+            onNotificationRemoved?(removedId)
+        }
+
+        trackedNotificationIds = existingIds
     }
 }
