@@ -43,9 +43,46 @@ struct AppsSettingsTab: View {
 
     @State private var searchText = ""
 
+    private static let prioritizedBundleIds: Set<String> = [
+        "com.tinyspeck.slackmacgap",
+        "ru.keepcoder.Telegram",
+        "com.apple.mail",
+        "com.microsoft.Outlook",
+        "com.microsoft.OutlookLegacy",
+        "com.microsoft.teams",
+        "com.microsoft.teams2",
+        "com.hnc.Discord",
+        "com.tencent.xinWeChat",
+        "com.tencent.qq",
+        "com.readdle.smartemail-Mac",
+        "it.bloop.airmail2",
+        "com.mimestream.Mimestream"
+    ]
+
+    private static let prioritizedNameKeywords: [String] = [
+        "slack",
+        "telegram",
+        "mail",
+        "outlook",
+        "teams",
+        "discord",
+        "wechat",
+        "qq",
+        "spark",
+        "airmail",
+        "mimestream"
+    ]
+
     var filteredApps: [AppConfiguration] {
         let allApps = Array(appSettings.appConfigurations.values)
-            .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+            .sorted { lhs, rhs in
+                let lhsPriority = appPriority(for: lhs)
+                let rhsPriority = appPriority(for: rhs)
+                if lhsPriority != rhsPriority {
+                    return lhsPriority < rhsPriority
+                }
+                return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName) == .orderedAscending
+            }
 
         if searchText.isEmpty {
             return allApps
@@ -54,6 +91,19 @@ struct AppsSettingsTab: View {
             $0.displayName.localizedCaseInsensitiveContains(searchText) ||
             $0.bundleIdentifier.localizedCaseInsensitiveContains(searchText)
         }
+    }
+
+    private func appPriority(for config: AppConfiguration) -> Int {
+        if Self.prioritizedBundleIds.contains(config.bundleIdentifier) {
+            return 0
+        }
+
+        let searchableText = "\(config.displayName) \(config.bundleIdentifier)".lowercased()
+        if Self.prioritizedNameKeywords.contains(where: { searchableText.contains($0) }) {
+            return 0
+        }
+
+        return 1
     }
 
     var body: some View {

@@ -127,7 +127,7 @@ final class AppSettings: ObservableObject {
         let config = AppConfiguration(
             bundleIdentifier: bundleIdentifier,
             displayName: displayName,
-            isEnabled: true,
+            isEnabled: false,
             colorHex: colorHex
         )
 
